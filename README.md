@@ -111,6 +111,20 @@ This project uses the [**BotanicGarden Dataset**](https://github.com/robot-pesg/
     python nerfstudio/scripts/train.py splatad-wild --vis viewer+tensorboard botanic-data
     ```
     
+<!-- # License
+
+This project is released under the **MIT License** (or specify your license, e.g., Apache 2.0). See the [LICENSE](LICENSE) file for details.
+
+### Third-Party Code and Licenses
+To facilitate out-of-the-box deployment, this repository contains or builds upon source code from several open-source libraries. All respective copyrights, trademarks, and licenses belong to their original authors:
+
+* **limo**: Licensed under the GPL-3.0 License.
+* **neurad-studio**: Licensed under the Apache License 2.0.
+* **Difix3D**: Subject to the NVIDIA Source Code License / MIT License (depending on their exact repo spec).
+* **nerfstudio & gsplat**: Licensed under the Apache License 2.0.
+
+Please refer to the respective subfolders or original repositories for their full license texts. The inclusion of these components strictly complies with and operates under their original open-source licenses. -->
+
 # Acknowledgements
 
 Our work is built upon the following projects:
@@ -123,13 +137,3 @@ Our work is built upon the following projects:
   
 
 We thank the authors and contributors of these repositories for making their work publicly available.
-
-# For Blind Review: Note on Third-Party Code
-To ensure the reproducibility of our results and for the convenience of the reviewers, this submission includes the source code of several open-source libraries that our work depends on.
-
-### Important:
-All copyright and license information within these third-party directories remains intact and unmodified. The inclusion of this code does not imply that we are the authors.
-
-These libraries are used under their respective original open-source licenses (e.g., MIT, Apache 2.0).
-
-The purpose of including this code is solely to facilitate the blind review process by providing a complete and immediately executable environment.
