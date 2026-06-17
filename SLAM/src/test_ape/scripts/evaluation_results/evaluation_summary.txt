@@ -1,0 +1,12 @@
+--- 序列: 1018_00odom_trajectory0.263068, Epoch: 0 ---
+轨迹文件: 1018_00odom_trajectory0.263068.txt
+参考文件: 1018_00tf_trajectory_matched0.263068.txt
+平均平移误差 (%): 0.7038
+平均旋转误差 (deg/100m): 0.6720
+
+--- 序列: 1018_00odom_trajectory0.263068, Epoch: 0 ---
+轨迹文件: 1018_00odom_trajectory0.263068.txt
+参考文件: 1018_00tf_trajectory_matched0.263068.txt
+平均平移误差 (%): 0.7038
+平均旋转误差 (deg/100m): 0.6720
+

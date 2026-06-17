@@ -1,0 +1,51 @@
+<launch>
+<!--remaps for kitti calibration since we build a second tf tree with the estimates-->
+<arg name="verbosity" default="info"/>
+<arg name="tf_namespace_alias" default="estimate"/>
+
+<node pkg="tf2_ros" type="static_transform_publisher" name="camera_to_left_gray" args="0.0 0.0 0.0  0.0 0.0 0.0 1.0  sensor/camera sensor/camera/grayscale/left" required="true"/>
+<node pkg="tf2_ros" type="static_transform_publisher" name="camera_to_left" args="0.0 0.0 0.0  0.0 0.0 0.0 1.0  sensor/camera sensor/camera/color/left" required="true"/>
+<node pkg="tf2_ros" type="static_transform_publisher" name="camera_to_vlp" args="0.138922870923538 -0.177101909101325 -0.126685267545513  0.5087038 -0.4949242 0.4930644 0.503148  sensor/camera sensor/velodyne" required="true"/>
+
+
+<node pkg="util_nodes_tf2_ros_tool" type="static_transform_alias" name="tf2_static_alias_vehicle_to_rig_left_$(arg tf_namespace_alias)" output="log" required="true">
+   <rosparam command="load" file="$(find util_nodes_tf2_ros_tool)/launch/params/static_transform_alias_parameters.yaml"/>
+
+   <param name="from_target_frame_id" value="sensor/camera"/> 
+   <param name="from_source_frame_id" value="sensor/camera/grayscale/left"/> 
+
+   <param name="to_target_frame_id" value="$(arg tf_namespace_alias)/sensor/camera"/> 
+   <param name="to_source_frame_id" value="$(arg tf_namespace_alias)/sensor/camera/grayscale/left"/> 
+</node>
+
+<node pkg="util_nodes_tf2_ros_tool" type="static_transform_alias" name="tf2_static_alias_vehicle_to_rig_right_$(arg tf_namespace_alias)" output="log" required="true">
+   <rosparam command="load" file="$(find util_nodes_tf2_ros_tool)/launch/params/static_transform_alias_parameters.yaml"/>
+
+   <param name="from_target_frame_id" value="sensor/camera"/> 
+   <param name="from_source_frame_id" value="sensor/camera/grayscale/right"/> 
+
+   <param name="to_target_frame_id" value="$(arg tf_namespace_alias)/sensor/camera"/> 
+   <param name="to_source_frame_id" value="$(arg tf_namespace_alias)/sensor/camera/grayscale/right"/> 
+</node>
+
+<!--x,y,z are distances from rear_axis to left camera from the kitti homepage http://www.cvlibs.net/datasets/kitti/setup.php -->
+<!-- <node pkg="tf2_ros" type="static_transform_publisher" name="transform_vehicle_left_camera" args="1.08 0 1.35 -1.5707963 0 -1.5707963 $(arg tf_namespace_alias)vehicle $(arg tf_namespace_alias)sensor/camera" required="true"/> -->
+<!-- transform is defined such as a point p can be transformed as p_a=trf_a_b*p_b (more in README.md) -->
+许
+<node pkg="tf2_ros" type="static_transform_publisher" name="transform_vehicle_left_camera_$(arg tf_namespace_alias)" args="0.12202361388114147    0.1412334842480124     -0.17854188038384372  0.50870 -0.49492 0.49306 -0.50315  $(arg tf_namespace_alias)/vehicle $(arg tf_namespace_alias)/sensor/camera" required="true"/>
+<node pkg="tf2_ros" type="static_transform_publisher" name="transform_local_cs_vehcile_$(arg tf_namespace_alias)"    args="0.12202361388114147    0.1412334842480124     -0.17854188038384372  0.50870 -0.49492 0.49306 -0.50315   $(arg tf_namespace_alias)/local_cs_vehicle $(arg tf_namespace_alias)/local_cs" required="true"/>
+<!-- <node pkg="tf2_ros" type="static_transform_publisher" name="transform_vehicle_left_camera_$(arg tf_namespace_alias)" args="0.12202361388114147    0.1412334842480124     0.822898091  0.50870 -0.49492 0.49306 -0.50315  $(arg tf_namespace_alias)/vehicle $(arg tf_namespace_alias)/sensor/camera" required="true"/>
+<node pkg="tf2_ros" type="static_transform_publisher" name="transform_local_cs_vehcile_$(arg tf_namespace_alias)"    args="0.12202361388114147    0.1412334842480124     0.822898091  0.50870 -0.49492 0.49306 -0.50315   $(arg tf_namespace_alias)/local_cs_vehicle $(arg tf_namespace_alias)/local_cs" required="true"/> -->
+
+
+<!-- <node pkg="tf2_ros" type="static_transform_publisher" name="transform_vehicle_left_camera_$(arg tf_namespace_alias)" args="0. 0. 0. 0. 0. 0. $(arg tf_namespace_alias)/vehicle $(arg tf_namespace_alias)/sensor/camera" required="true"/> --> -->
+                                                                                                               
+<node pkg="tf2_ros" type="static_transform_publisher" name="transform_vehicle_left_camera_estimate_prior" args="0.138922870923538 -0.177101909101325 -0.126685267545513  0.5087038 -0.4949242 0.4930644 0.503148  estimate_prior/sensor/camera estimate_prior/vehicle" required="true"/>
+<node pkg="tf2_ros" type="static_transform_publisher" name="transform_local_cs_left_camera_estimate_prior" args="0.138922870923538 -0.177101909101325 -0.126685267545513  0.5087038 -0.4949242 0.4930644 0.503148  estimate_prior/local_cs estimate_prior/local_cs_vehicle" required="true"/>
+
+<!-- <node pkg="tf2_ros" type="static_transform_publisher" name="transform_vehicle_left_camera_estimate_prior" args="0.138922870923538 0.822898091 -0.126685267545513  0.5087038 -0.4949242 0.4930644 0.503148  estimate_prior/sensor/camera estimate_prior/vehicle" required="true"/>
+<node pkg="tf2_ros" type="static_transform_publisher" name="transform_local_cs_left_camera_estimate_prior" args="0.138922870923538 0.822898091 -0.126685267545513  0.5087038 -0.4949242 0.4930644 0.503148  estimate_prior/local_cs estimate_prior/local_cs_vehicle" required="true"/> -->
+
+
+
+</launch>

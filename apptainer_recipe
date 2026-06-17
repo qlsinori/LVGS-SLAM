@@ -1,0 +1,76 @@
+Bootstrap: docker
+From: nvidia/cuda:11.8.0-devel-ubuntu22.04
+
+%labels
+org.opencontainers.image.licenses = "Apache License 2.0"
+org.opencontainers.image.base.name="docker.io/library/nvidia/cuda:11.8.0-devel-ubuntu22.04"
+
+%post
+DEBIAN_FRONTEND=noninteractive TZ=Europe/Berlin apt-get update && \
+apt-get install -y --no-install-recommends \
+build-essential \
+cmake \
+curl \
+wget \
+ffmpeg \
+git \
+vim-tiny \
+libatlas-base-dev \
+libhdf5-dev \
+libprotobuf-dev \
+protobuf-compiler \
+libboost-filesystem-dev \
+libboost-graph-dev \
+libboost-program-options-dev \
+libboost-system-dev \
+libboost-test-dev \
+libcgal-dev \
+libeigen3-dev \
+libflann-dev \
+libfreeimage-dev \
+libgflags-dev \
+libglew-dev \
+libmetis-dev \
+libqt5opengl5-dev \
+libsuitesparse-dev \
+python-is-python3 \
+python3.10-dev \
+python3-pip \
+qtbase5-dev \
+&& \
+rm -rf /var/lib/apt/lists/*
+
+python3.10 -m pip install --no-cache-dir --upgrade pip "setuptools<70.0" pathtools promise pybind11
+python3.10 -m pip install --no-cache-dir torch==2.0.1+cu118 torchvision==0.15.2+cu118 --extra-index-url https://download.pytorch.org/whl/cu118
+TCNN_CUDA_ARCHITECTURES="86;80" python3.10 -m pip install --no-cache-dir git+https://github.com/NVlabs/tiny-cuda-nn.git#subdirectory=bindings/torch
+
+mkdir -p /workspace
+cd /workspace
+
+git clone https://github.com/georghess/neurad-studio.git
+cd neurad-studio
+python3.10 -m pip install -e .[dev]
+
+cd /workspace
+git clone --recurse-submodules https://github.com/carlinds/splatad.git
+cd splatad
+BUILD_NO_CUDA=1 python3.10 -m pip install -e .[dev]
+
+python -c "import viser; viser.ViserServer()"
+cd /workspace
+
+%environment
+export DEBIAN_FRONTEND=noninteractive
+export TZ=Europe/Berlin
+export CUDA_HOME="/usr/local/cuda"
+export TCNN_CUDA_ARCHITECTURES="86;80"
+export PATH="/usr/local/cuda/bin:$PATH"
+export LD_LIBRARY_PATH="/usr/local/cuda/lib64:$LD_LIBRARY_PATH"
+
+%runscript
+cd /workspace
+exec /bin/bash -l "$@"
+
+%startscript
+cd /workspace
+exec /bin/bash -l "$@"

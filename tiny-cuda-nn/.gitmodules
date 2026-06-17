@@ -1,0 +1,6 @@
+[submodule "dependencies/cutlass"]
+	path = dependencies/cutlass
+	url = https://bgithub.xyz/NVIDIA/cutlass
+[submodule "dependencies/fmt"]
+	path = dependencies/fmt
+	url = https://bgithub.xyz/fmtlib/fmt

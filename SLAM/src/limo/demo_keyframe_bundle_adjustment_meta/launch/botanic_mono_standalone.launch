@@ -1,0 +1,64 @@
+<launch>
+
+  <!--must be set before launchfile starts-->
+  <rosparam param="use_sim_time" subst_value="True"> true </rosparam>
+
+  <!--feature matching-->
+  <include file="$(find demo_keyframe_bundle_adjustment_meta)/launch/feature_matching.launch">
+      <arg name="camera_name" value="left"/>
+  </include>
+
+
+  <!--define aliases and static transforms-->
+  <include file="$(find demo_keyframe_bundle_adjustment_meta)/launch/tf2_botanic.launch">
+    <arg name="tf_namespace_alias" value="estimate"/>
+  </include>
+
+  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="transform_vehicle_left_camera_estimate_prior" args="0 1.35 -1.08 1.5707963 -1.5707963 0 estimate_prior/sensor/camera estimate_prior/vehicle" required="true"/>
+  <node pkg="tf2_ros" type="static_transform_publisher" name="transform_local_cs_left_camera_estimate_prior" args="0 1.35 -1.08 1.5707963 -1.5707963 0 estimate_prior/local_cs estimate_prior/local_cs_vehicle" required="true"/> -->
+
+  <!-- This connects trres estimate_prior and estimate in case you wanted to calculate a transform between the two of them. -->
+  <node pkg="tf2_ros" type="static_transform_publisher" name="transform_local_estimate_prior" args="0. 0. 0. 0. 0. 0. estimate/local_cs estimate_prior/local_cs" required="true"/>
+  <node pkg="tf2_ros" type="static_transform_publisher" name="transform_local_cs" args="0. 0. 0. 0. 0. 0. estimate/local_cs local_cs" required="true"/>
+  
+  <!-- Remapping of topics for gt -->
+  <node pkg="tf2_ros" type="static_transform_publisher" name="transform_vehicle_camera_vehicle_gt" args=" 0 1.35 -1.08 1.5707963 -1.5707963 0 sensor/camera gt/vehicle" required="true"/>
+  <node pkg="tf2_ros" type="static_transform_publisher" name="transform_local_cs_camera_gt" args="0 1.35 -1.08 1.5707963 -1.5707963 0 local_cs gt/local_cs_vehicle" required="true"/>
+
+  <node pkg="matches_conversion_ros_tool" type="add_outlier_flag" name="add_outlier_flag_node" output="screen" required="true">
+    <rosparam command="load" file="$(find matches_conversion_ros_tool)/launch/params/add_outlier_flag_parameters.yaml"/>
+    <param name="verbosity" value="info"/>
+    <param name="subscriber_topic" value="/matches/grayscale/left/"/>
+    <param name="has_depth" value="false"/>
+    <param name="publisher_topic" value="/matches/grayscale/left/with_outlier_dummy"/>
+  </node>
+
+  <!-- Add labels from semantic labeling to matches. -->
+  <include file="$(find demo_keyframe_bundle_adjustment_meta)/launch/semantic_labels.launch">
+    <arg name="subscriber_topic_matches" default="/matches/grayscale/left/with_outlier_dummy"/>
+    <arg name="publisher_topic" default="/matches/grayscale/left/with_label"/>
+  </include>
+
+  <!-- launch keyframe bundle adjustment -->
+  <include file="$(find demo_keyframe_bundle_adjustment_meta)/launch/keyframe_ba_monolid.launch">
+  <arg name="tracklets_subscriber_topic" value="/matches/grayscale/left/with_label"/>
+   <arg name="prior_vehicle_frame" value=""/>
+  </include>
+  <!-- play rosbag -->
+  <!-- /mrtstorage/datasets/kitti/odometry/odometry_rosbags/gray/00.bag"-->
+  
+
+
+  <arg name="rviz_config" default="$(find demo_keyframe_bundle_adjustment_meta)/res/default.rviz" />
+  <!-- <arg name="bag_file" default="/slam/bagfile/LIMO/01.bag" /> -->
+  <arg name="bag_file" default="/slam/bagfile/LIMO/processed_output_2025-10-16-17-51-12.bag" />
+
+
+  <arg name="play_rate" default="0.1" />
+
+  <node pkg="rviz" type="rviz" name="rviz" args="-d $(arg rviz_config)" required="true"/>
+
+  <!-- Play rosbag with clock and specified rate -->
+  <node pkg="rosbag" type="play" name="player" output="screen" args="--clock --start=10 -r $(arg play_rate) $(arg bag_file)" required="true"/>
+
+</launch>

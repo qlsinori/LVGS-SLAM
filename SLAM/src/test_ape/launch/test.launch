@@ -1,0 +1,51 @@
+<launch>
+
+  <env name="ROS_LOG_DIR" value="/slam/logs"/>
+  <!-- 1018_00 1006_03 -->
+  <arg name="seq" default="1006_02" doc="1008_03 1006_03 1018_00"/>
+
+  <!-- ============================================================ -->
+  <!--  1. Trajectory evaluation (APE)                               -->
+  <!-- ============================================================ -->
+  <node pkg="test_ape" type="trajectory_comparator.py" name="test_ape" output="screen">
+       <param name="odom_topic"  value="/estimate/complete_path"/>
+       <param name="tf_target_frame" value="gt/vehicle"/>
+       <param name="tf_source_frame" value="estimate/local_cs_vehicle"/>
+       <param name="seq" value="$(arg seq)"/>
+  </node>
+
+  <!-- ============================================================ -->
+  <!--  2. odom SLAM (botanic.launch)                                -->
+  <!-- ============================================================ -->
+  <include file="$(find demo_keyframe_bundle_adjustment_meta)/launch/botanic.launch">
+       <arg name="seq" value="$(arg seq)"/>
+  </include>
+
+  <!-- ============================================================ -->
+  <!--  3. Keyframe bridge: SLAM -> 3DGS                              -->
+  <!--     Listens to /estimate/complete_path and rosbag sensor data  -->
+  <!--     Publishes /keyframe_pose, /keyframe_image, /keyframe_cloud -->
+  <!-- ============================================================ -->
+  <node pkg="test_ape" type="keyframe_bridge.py" name="keyframe_bridge"
+        output="screen" respawn="false">
+    <param name="image_buffer_sec" value="5.0"/>
+    <param name="cloud_buffer_sec" value="5.0"/>
+    <param name="time_tolerance"   value="0.15"/>
+  </node>
+
+  <!-- ============================================================ -->
+  <!--  4. 3DGS Mapping ROS Node                                     -->
+  <!--     Subscribes to /keyframe_pose, /keyframe_image, /keyframe_cloud -->
+  <!--     Publishes /sensor/camera/depth/image_rect for SLAM         -->
+  <!-- ============================================================ -->
+  <arg name="gs_workspace" default="/slam/code/LVGS-SLAM"/>
+  <arg name="gs_method" default="splatad-wild"/>
+  <arg name="gs_data" default="botanic-data"/>
+  <arg name="gs_vis" default="viewer+tensorboard"/>
+
+  <node name="gs_mapping_node" pkg="test_ape" type="gs_mapping_launcher.sh"
+        output="screen" respawn="false"
+        args="$(arg gs_workspace) $(arg gs_method) $(arg gs_vis) $(arg gs_data)">
+  </node>
+
+</launch>

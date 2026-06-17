@@ -1,0 +1,16 @@
+<launch>
+
+  <env name="ROS_LOG_DIR" value="/slam/logs"/>
+  <arg name="seq" default="tuhh_day_02"/>
+  <node pkg="test_ape" type="trajectory_comparator.py" name="test_ape" output="screen">
+       <param name="odom_topic"  value="/estimate/complete_path"/>
+       <param name="tf_target_frame" value="gt/vehicle"/>
+       <param name="tf_source_frame" value="estimate/local_cs_vehicle"/>
+       <param name="seq" value="$(arg seq)"/>
+  </node>
+
+  <include file="$(find demo_keyframe_bundle_adjustment_meta)/launch/tuhh_day_02.launch">
+       <arg name="seq" value="$(arg seq)"/>
+  </include>
+
+</launch>

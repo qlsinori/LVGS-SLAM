@@ -1,0 +1,69 @@
+<launch>
+  <env name="ROS_LOG_DIR" value="/slam/logs"/>
+  <rosparam param="use_sim_time" subst_value="True"> true </rosparam>
+  <arg name="node_output" default="screen"/>
+  <arg name="seq" default="1018_00" />
+  <arg name="use_pose_prior_residuals" default="false" />
+
+  <!-- ==================== SLAM Module ==================== -->
+
+  <!-- Feature matching -->
+  <include file="$(find demo_keyframe_bundle_adjustment_meta)/launch/feature_matching.launch">
+      <arg name="camera_name" value="left"/>
+      <arg name="node_output" value="$(arg node_output)"  if="true"/>
+  </include>
+
+  <!-- Depth estimator tracklets node (subscribes to /sensor/camera/depth/image_rect from 3DGS) -->
+  <arg name="config_depth_estimator" default="$(find demo_keyframe_bundle_adjustment_meta)/res/mono_lidar_fusion_parameters.yaml"/>
+  <arg name="config_tracklets_depth" default="$(find demo_keyframe_bundle_adjustment_meta)/res/config_tracklets_depth_ros_tool.yaml"/>
+  <node pkg="tracklets_depth_ros_tool" type="tracklet_depth_node" name="tracklets_depth_node" output="$(arg node_output)" required="true">
+    <param name="config_tracklet_depth" value="$(arg config_tracklets_depth)" />
+    <param name="config_depth_estimator" value="$(arg config_depth_estimator)" />
+    <param name="verbosity" value="debug" />
+  </node>
+
+  <!-- TF transforms -->
+  <include file="$(find demo_keyframe_bundle_adjustment_meta)/launch/tf2_botanic.launch">
+    <arg name="tf_namespace_alias" value="estimate"/>
+  </include>
+
+  <node pkg="tf2_ros" type="static_transform_publisher" name="transform_local_estimate_prior" args="0. 0. 0. 0. 0. 0. estimate/local_cs estimate_prior/local_cs" required="true"/>
+  <node pkg="tf2_ros" type="static_transform_publisher" name="transform_local_cs" args="0. 0. 0. 0. 0. 0. estimate/local_cs local_cs" required="true"/>
+
+  <!-- GT transforms -->
+  <node pkg="tf2_ros" type="static_transform_publisher" name="transform_vehicle_camera_vehicle_gt" args="0.138922870923538 -0.177101909101325 -0.126685267545513  0.5087038 -0.4949242 0.4930644 0.503148 sensor/camera gt/vehicle" required="true"/>
+  <node pkg="tf2_ros" type="static_transform_publisher" name="transform_local_cs_camera_gt" args="0.138922870923538 -0.177101909101325 -0.126685267545513  0.5087038 -0.4949242 0.4930644 0.503148 local_cs gt/local_cs_vehicle" required="true"/>
+
+  <!-- Outlier flag conversion -->
+  <node pkg="matches_conversion_ros_tool" type="add_outlier_flag" name="add_outlier_flag_node" output="$(arg node_output)" required="true">
+    <rosparam command="load" file="$(find matches_conversion_ros_tool)/launch/params/add_outlier_flag_parameters.yaml"/>
+    <param name="verbosity" value="debug"/>
+    <param name="subscriber_depth_topic" value="/tracklets_depth/tracklets/left"/>
+    <param name="has_depth" value="true"/>
+    <param name="publisher_topic" value="/tracklets_depth/tracklets/left/with_outlier_dummy"/>
+  </node>
+
+  <!-- Keyframe bundle adjustment -->
+  <include file="$(find demo_keyframe_bundle_adjustment_meta)/launch/keyframe_ba_monolid_without_label.launch">
+    <arg name="prior_vehicle_frame" value="estimate_prior/vehicle"  if="false"/>
+    <arg name="node_output" value="$(arg node_output)"  if="true"/>
+    <arg name="use_pose_prior_residuals" value="$(arg use_pose_prior_residuals)"/>
+  </include>
+
+  <!-- ==================== 3DGS Mapping Module ==================== -->
+
+  <node pkg="nerfstudio" type="train_ros.py" name="gs_mapping_node" output="screen" required="false">
+    <param name="~method" value="splatad-wild" />
+    <param name="~dataparser" value="botanic-data" />
+  </node>
+
+  <!-- ==================== Visualization & Rosbag ==================== -->
+
+  <arg name="rviz_config" default="$(find demo_keyframe_bundle_adjustment_meta)/res/default.rviz" />
+  <arg name="bag_file" default="/slam/bagfile/Botanic/$(arg seq)_pro.bag" />
+  <arg name="play_rate" default="0.2" />
+
+  <node pkg="rviz" type="rviz" name="rviz" args="-d $(arg rviz_config)" required="true"/>
+  <node pkg="rosbag" type="play" name="player" output="screen" args="--clock --start=30.0 -r $(arg play_rate) $(arg bag_file)" required="true"/>
+
+</launch>

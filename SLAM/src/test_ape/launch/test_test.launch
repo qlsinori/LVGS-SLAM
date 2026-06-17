@@ -1,0 +1,18 @@
+<launch>
+
+  <env name="ROS_LOG_DIR" value="/slam/logs"/>
+  <!-- 1018_00 1006_03 -->
+  <arg name="seq" default="1006_02" doc="1008_03 1006_03 1018_00"/>
+  <node pkg="test_ape" type="trajectory_comparator.py" name="test_ape" output="screen">
+       <param name="odom_topic"  value="/estimate/complete_path"/>
+       <param name="tf_target_frame" value="gt/vehicle"/>
+       <param name="tf_source_frame" value="estimate/local_cs_vehicle"/>
+       <param name="seq" value="$(arg seq)"/>
+  </node>
+  
+  <include file="$(find demo_keyframe_bundle_adjustment_meta)/launch/botanic.launch">
+       <arg name="seq" value="$(arg seq)"/>
+  </include>
+  
+
+</launch>
